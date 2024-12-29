@@ -1,6 +1,6 @@
 import { Service, PlatformAccessory, CharacteristicValue } from 'homebridge';
 
-import { ExampleHomebridgePlatform } from './platform';
+import { GPESP32Platform } from './platform';
 
 /**
  * Platform Accessory
@@ -17,10 +17,11 @@ export class ExamplePlatformAccessory {
   private exampleStates = {
     On: false,
     Brightness: 100,
+    Hue:0,
   };
 
   constructor(
-    private readonly platform: ExampleHomebridgePlatform,
+    private readonly platform: GPESP32Platform,
     private readonly accessory: PlatformAccessory,
   ) {
 
@@ -49,6 +50,10 @@ export class ExamplePlatformAccessory {
     // register handlers for the Brightness Characteristic
     this.service.getCharacteristic(this.platform.Characteristic.Brightness)
       .onSet(this.setBrightness.bind(this));       // SET - bind to the 'setBrightness` method below
+
+    this.service.getCharacteristic(this.platform.Characteristic.Hue).onSet((value)=>this.setHue(value));
+    this.service.getCharacteristic(this.platform.Characteristic.ColorTemperature).onSet((value)=>console.log('CT: '+value));
+    this.service.getCharacteristic(this.platform.Characteristic.Saturation).onSet((value)=>console.log('SAT: '+value));
 
     /**
      * Creating multiple services of the same type.
@@ -137,5 +142,12 @@ export class ExamplePlatformAccessory {
 
     this.platform.log.debug('Set Characteristic Brightness -> ', value);
   }
+
+  async setHue(value:CharacteristicValue) {
+    this.exampleStates.Hue = value as number;
+
+    this.platform.log.debug('Set Characteristic Hue -> ', value);
+  }
+
 
 }

@@ -2,18 +2,23 @@ import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, 
 
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
 import { ExamplePlatformAccessory } from './platformAccessory';
+import dgram from 'dgram';
+import { ESP32LEDPlatformAccessory } from './ESP32LEDPlatformAccessory';
+import { ESP32DeviceStatusInformation } from './models/deviceStatus';
 
 /**
  * HomebridgePlatform
  * This class is the main constructor for your plugin, this is where you should
  * parse the user config and discover/register accessories with Homebridge.
  */
-export class ExampleHomebridgePlatform implements DynamicPlatformPlugin {
+export class GPESP32Platform implements DynamicPlatformPlugin {
   public readonly Service: typeof Service = this.api.hap.Service;
   public readonly Characteristic: typeof Characteristic = this.api.hap.Characteristic;
+  private udpListner: dgram.Socket | undefined;
 
   // this is used to track restored cached accessories
   public readonly accessories: PlatformAccessory[] = [];
+  public readonly connectedLEDS: ESP32LEDPlatformAccessory[] = [];
 
   constructor(
     public readonly log: Logger,
@@ -44,13 +49,37 @@ export class ExampleHomebridgePlatform implements DynamicPlatformPlugin {
     this.accessories.push(accessory);
   }
 
-  /**
-   * This is an example method showing how to register discovered accessories.
-   * Accessories must only be registered once, previously created accessories
-   * must not be registered again to prevent "duplicate UUID" errors.
-   */
   discoverDevices() {
 
+    this.udpListner = dgram.createSocket('udp4');
+    this.udpListner.on('message', (msg, rinfo) => {
+      this.log.info(`Found: ${rinfo.address}`);
+      const deviceStatus: ESP32DeviceStatusInformation = JSON.parse(msg + '');
+      this.log.info(`MAC: ${deviceStatus.mac}`);
+      const uuid = this.api.hap.uuid.generate(deviceStatus.mac);
+      this.log.info('UUUUID=>' + uuid);
+      const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
+      if (!existingAccessory) {
+        const accessory = new this.api.platformAccessory<ESP32DeviceStatusInformation>(deviceStatus.publicName, uuid);
+        accessory.context = deviceStatus;
+        const esp32LEDPlatformAccessory = new ESP32LEDPlatformAccessory(this, accessory, rinfo.address);
+        this.connectedLEDS.push(esp32LEDPlatformAccessory);
+        this.log.info('REGISTer');
+        this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+        this.accessories.push(accessory);
+      } else {
+        const findConnected = this.connectedLEDS.find(accessory => accessory.getUID() === uuid);
+        if (findConnected) {
+          findConnected.checkForUpdate(deviceStatus);
+        } else {
+          existingAccessory.context = deviceStatus;
+          const esp32LEDPlatformAccessory = new ESP32LEDPlatformAccessory(this, existingAccessory as PlatformAccessory<ESP32DeviceStatusInformation>, rinfo.address);
+          this.connectedLEDS.push(esp32LEDPlatformAccessory);
+        }
+      }
+
+    });
+    this.udpListner.bind(8266);
     // EXAMPLE ONLY
     // A real plugin you would discover accessories from the local network, cloud services
     // or a user-defined array in the platform config.

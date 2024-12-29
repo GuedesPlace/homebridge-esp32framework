@@ -1,5 +1,5 @@
 {
-  "pluginAlias": "ExampleHomebridgePlugin",
+  "pluginAlias": "GPESP32",
   "pluginType": "platform",
   "singular": true,
   "schema": {

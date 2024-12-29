@@ -1,19 +1,19 @@
 {
-  "private": true,
-  "displayName": "Plugin Name",
-  "name": "homebridge-plugin-name",
+  "private": false,
+  "displayName": "GP ESP32LEDStrip and Framework",
+  "name": "@guedesplace/homebridge-plugin-esp32ledstripe",
   "version": "1.0.0",
-  "description": "A short description about what your plugin does.",
+  "description": "Search for LED Stripes using GuedesPlaces Code. Running on ESP32.",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "https://github.com/USERNAME/GITHUB_PROJECT_NAME.git"
+    "url": "https://github.com/GuedesPlace/homebridge-esp32framework.git"
   },
   "bugs": {
-    "url": "https://github.com/USERNAME/GITHUB_PROJECT_NAME/issues"
+    "url": "https://github.com/GuedesPlace/homebridge-esp32framework/issues"
   },
   "engines": {
-    "node": "^18.17.0 || ^20.9.0",
+    "node": "^18.17.0 || ^20.9.0 || ^22.10.0 || ^23.0.0",
     "homebridge": "^1.6.0"
   },
   "main": "dist/index.js",
@@ -26,13 +26,15 @@
   "keywords": [
     "homebridge-plugin"
   ],
-  "dependencies": {},
+  "dependencies": {
+    "node-fetch": "^3.3.2"
+  },
   "devDependencies": {
-    "@types/node": "^18.16.20",
+    "@types/node": "^22.10.2",
     "@typescript-eslint/eslint-plugin": "^5.62.0",
     "@typescript-eslint/parser": "^5.62.0",
     "eslint": "^8.45.0",
-    "homebridge": "^1.6.0",
+    "homebridge": "^1.8.0",
     "nodemon": "^2.0.22",
     "rimraf": "^3.0.2",
     "ts-node": "^10.9.1",
