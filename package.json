@@ -4,7 +4,7 @@
   "name": "@guedesplace/homebridge-plugin-esp32ledstripe",
   "version": "1.0.0",
   "type": "module",
-  "description": "Search for LED Stripes using GuedesPlaces Code. Running on ESP32.",
+  "description": "Searchs for LED Stripes using GuedesPlaces Code, running on ESP32. Control them as lightbuble.",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
@@ -29,6 +29,7 @@
   ],
   "dependencies": {
     "color-convert": "^2.0.1",
+    "color-temperature": "^0.2.7",
     "node-fetch": "^3.3.2",
     "rxjs": "^7.8.1"
   },
