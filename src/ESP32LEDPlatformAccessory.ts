@@ -159,13 +159,14 @@ export class ESP32LEDPlatformAccessory {
   }
 
   private async setColorTemperature(value: CharacteristicValue) {
-    this.state.saturation = value as number;
+    const ct = value as number;
     this.platform.log.debug('Set Characteristic ColorTemperature -> ', value);
-    const rgb = colorTemperature.colorTemperature2rgb(value);
+    const rgb = colorTemperature.colorTemperature2rgb(ct*100);
     const payload = await this.getCurrentColorPayload();
     payload.red = rgb.red;
     payload.green = rgb.green;
     payload.blue = rgb.blue;
+    this.platform.log.info(JSON.stringify(payload));
     await this.applyColorPayload(payload);
   }
 
