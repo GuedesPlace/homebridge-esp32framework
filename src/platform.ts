@@ -1,10 +1,10 @@
 import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic } from 'homebridge';
 
-import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
-import { ExamplePlatformAccessory } from './platformAccessory';
+import { PLATFORM_NAME, PLUGIN_NAME } from './settings.js';
+import { ExamplePlatformAccessory } from './platformAccessory.js';
 import dgram from 'dgram';
-import { ESP32LEDPlatformAccessory } from './ESP32LEDPlatformAccessory';
-import { ESP32DeviceStatusInformation } from './models/deviceStatus';
+import { ESP32LEDPlatformAccessory } from './ESP32LEDPlatformAccessory.js';
+import { ESP32DeviceStatusInformation } from './models/deviceStatus.js';
 
 /**
  * HomebridgePlatform
@@ -12,8 +12,8 @@ import { ESP32DeviceStatusInformation } from './models/deviceStatus';
  * parse the user config and discover/register accessories with Homebridge.
  */
 export class GPESP32Platform implements DynamicPlatformPlugin {
-  public readonly Service: typeof Service = this.api.hap.Service;
-  public readonly Characteristic: typeof Characteristic = this.api.hap.Characteristic;
+  public readonly Service: typeof Service;
+  public readonly Characteristic: typeof Characteristic;
   private udpListner: dgram.Socket | undefined;
 
   // this is used to track restored cached accessories
@@ -25,6 +25,8 @@ export class GPESP32Platform implements DynamicPlatformPlugin {
     public readonly config: PlatformConfig,
     public readonly api: API,
   ) {
+    this.Service = this.api.hap.Service;
+    this.Characteristic = this.api.hap.Characteristic;
     this.log.debug('Finished initializing platform:', this.config.name);
 
     // When this event is fired it means Homebridge has restored all cached accessories from disk.
@@ -35,6 +37,11 @@ export class GPESP32Platform implements DynamicPlatformPlugin {
       log.debug('Executed didFinishLaunching callback');
       // run the method to discover / register your devices as accessories
       this.discoverDevices();
+    });
+    this.api.on('shutdown', ()=>{
+      if (this.udpListner) {
+        this.udpListner.close();
+      }
     });
   }
 

@@ -4,6 +4,9 @@ import { GPESP32Platform } from './platform';
 import { ESP32DeviceStatusInformation } from './models/deviceStatus';
 import { ColorPayload } from './models/ColorPayload';
 import fetch from 'node-fetch';
+import convert from 'color-convert';
+import { LEDStatus } from './models/LEDStatus';
+import { debounce, debounceTime, Subject } from 'rxjs';
 
 /**
  * Platform Accessory
@@ -17,11 +20,8 @@ export class ESP32LEDPlatformAccessory {
    * These are just used to create a working example
    * You should implement your own code to track the state of your accessory
    */
-  private exampleStates = {
-    On: false,
-    Brightness: 100,
-    Hue: 0,
-  };
+  private state: LEDStatus = { hue: 0, saturation: 0 };
+  private stateSubject:Subject<LEDStatus> = new Subject();
 
   constructor(
     private readonly platform: GPESP32Platform,
@@ -58,7 +58,17 @@ export class ESP32LEDPlatformAccessory {
 
     this.service.getCharacteristic(this.platform.Characteristic.Hue).onSet((value) => this.setHue(value));
     this.service.getCharacteristic(this.platform.Characteristic.ColorTemperature).onSet((value) => console.log('CT: ' + value));
-    this.service.getCharacteristic(this.platform.Characteristic.Saturation).onSet((value) => console.log('SAT: ' + value));
+    this.service.getCharacteristic(this.platform.Characteristic.Saturation).onSet(this.setSaturation.bind(this));
+
+    this.stateSubject.pipe(debounceTime(100)).subscribe(async res=>{
+      const rgb = convert.hsv.rgb(res.hue, res.saturation, 100);
+      const payload = await this.getCurrentColorPayload();
+      payload.red = rgb[0];
+      payload.green = rgb[1];
+      payload.blue = rgb[2];
+      this.platform.log.info(JSON.stringify(payload));
+      await this.applyColorPayload(payload);
+    });
   }
 
   async setOn(value: CharacteristicValue) {
@@ -88,7 +98,7 @@ export class ESP32LEDPlatformAccessory {
 
   }
 
-  async getBrightness():Promise<CharacteristicValue> {
+  async getBrightness(): Promise<CharacteristicValue> {
     const payload = await this.getCurrentColorPayload();
     this.platform.log.debug('Get Characteristic Brightnesss ESP ->', payload.brightness);
     return payload.brightness;
@@ -96,9 +106,15 @@ export class ESP32LEDPlatformAccessory {
 
 
   async setHue(value: CharacteristicValue) {
-    this.exampleStates.Hue = value as number;
-
+    this.state.hue = value as number;
     this.platform.log.debug('Set Characteristic Hue -> ', value);
+    this.stateSubject.next({...this.state});
+  }
+
+  async setSaturation(value: CharacteristicValue) {
+    this.state.saturation = value as number;
+    this.platform.log.debug('Set Characteristic SAT -> ', value);
+    this.stateSubject.next({...this.state});
   }
 
   getUID(): string {
@@ -132,4 +148,5 @@ export class ESP32LEDPlatformAccessory {
     this.currentPayload = data;
     return { ...this.currentPayload };
   }
+
 }

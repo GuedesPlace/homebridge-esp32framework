@@ -3,6 +3,7 @@
   "displayName": "GP ESP32LEDStrip and Framework",
   "name": "@guedesplace/homebridge-plugin-esp32ledstripe",
   "version": "1.0.0",
+  "type": "module",
   "description": "Search for LED Stripes using GuedesPlaces Code. Running on ESP32.",
   "license": "Apache-2.0",
   "repository": {
@@ -27,7 +28,9 @@
     "homebridge-plugin"
   ],
   "dependencies": {
-    "node-fetch": "^3.3.2"
+    "color-convert": "^2.0.1",
+    "node-fetch": "^3.3.2",
+    "rxjs": "^7.8.1"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
@@ -38,6 +41,6 @@
     "nodemon": "^2.0.22",
     "rimraf": "^3.0.2",
     "ts-node": "^10.9.1",
-    "typescript": "^4.9.5"
+    "typescript": "^5.6.3"
   }
 }
